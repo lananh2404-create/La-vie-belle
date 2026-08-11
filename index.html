@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#022c22">
+<title>Sổ thu tiền nhà</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-192.png">
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;background:#f2f2f0;color:#1c1a17;font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;padding-bottom:86px;-webkit-font-smoothing:antialiased}
+h1,h2,h3,.serif{font-family:Georgia,"Times New Roman",serif;font-weight:600;margin:0;letter-spacing:-.01em}
+.mono{font-family:ui-monospace,"Roboto Mono",Menlo,monospace}
+header{background:linear-gradient(160deg,#06382c 0%,#022c22 100%);color:#f7f7f5;padding:calc(env(safe-area-inset-top) + 20px) 18px 18px}
+.hrow{display:flex;justify-content:space-between;align-items:baseline}
+.hrow h1{font-size:23px}
+.hrow span{font-family:ui-monospace,monospace;font-size:11px;color:#7fcaad;letter-spacing:.04em}
+.mnav{display:flex;align-items:center;gap:6px;margin-top:16px;background:rgba(255,255,255,.07);border-radius:12px;padding:4px}
+.mnav button{background:none;border:0;color:#cdece0;border-radius:9px;padding:7px 14px;font-size:19px;line-height:1}
+.mnav button:active{background:rgba(255,255,255,.12)}
+.mnav div{flex:1;text-align:center;font-family:ui-monospace,monospace;font-size:16px;letter-spacing:.02em}
+main{padding:16px 14px;display:flex;flex-direction:column;gap:14px}
+.card{background:#fff;border:1px solid #e9e7e3;border-radius:16px;box-shadow:0 1px 2px rgba(28,26,23,.04)}
+.pad{padding:16px}
+.lbl{font-size:10.5px;text-transform:uppercase;letter-spacing:.09em;color:#8a847c;font-weight:600}
+.hero{background:linear-gradient(155deg,#0a4536 0%,#022c22 100%);border-radius:18px;padding:18px;color:#f7f7f5;box-shadow:0 6px 20px rgba(2,44,34,.18)}
+.hero .lbl{color:#7fcaad}
+.big{font-family:ui-monospace,monospace;font-size:38px;line-height:1.1;margin-top:6px;letter-spacing:-.02em}
+.big small{font-size:16px;color:#7fcaad;letter-spacing:0}
+.bar{height:6px;border-radius:99px;background:rgba(255,255,255,.16);overflow:hidden;margin-top:16px}
+.bar i{display:block;height:100%;background:#f9c65b;border-radius:99px;transition:width .4s}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;font-family:ui-monospace,monospace;font-size:11px;color:#a9d8c6;margin-top:10px;gap:4px}
+.g3 :nth-child(2){text-align:center;color:#f7f7f5}
+.g3 :nth-child(3){text-align:right;color:#ffb3ae}
+.bd{width:100%;border-collapse:collapse;margin-top:12px;font-family:ui-monospace,monospace;font-size:13px}
+.bd td{padding:9px 0;border-bottom:1px solid #f4f2ef;color:#5c564e}
+.bd td:nth-child(2){text-align:right;color:#06382c}
+.bd td:nth-child(3){text-align:right;color:#b0aaa1;font-size:10.5px;width:46px}
+.bd tr:last-child td{border-bottom:0;border-top:1.5px solid #06382c;padding-top:11px;font-weight:700;color:#06382c;font-size:14px}
+.todo p{margin:0;padding:12px 16px;font-size:13.5px;border-top:1px solid #f4f2ef;color:#4a443d;line-height:1.45}
+.todo p::before{content:"›";color:#c98a1e;font-weight:700;margin-right:8px}
+.todo p.u{color:#a5123a;background:#fff5f6}
+.todo p.u::before{color:#a5123a}
+section h3{font-size:15px;color:#06382c}
+.ghead{display:flex;justify-content:space-between;align-items:baseline;padding:0 4px 9px}
+.ghead em{font-style:normal;font-family:system-ui;font-size:11.5px;color:#8a847c;margin-left:8px;font-weight:400}
+.ghead b{font-family:ui-monospace,monospace;font-size:13px;color:#5c564e;font-weight:500}
+.row{margin-bottom:10px;overflow:hidden;position:relative}
+.row::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px}
+.row.r-paid::before{background:#8fd3b6}
+.row.r-late::before{background:#e11d48}
+.row.r-due::before{background:#f0b429}
+.rtop{padding:15px 16px}
+.rtop .t{display:flex;justify-content:space-between;gap:10px}
+.rtop .n{font-family:Georgia,serif;font-size:16.5px;color:#06382c;font-weight:600}
+.rtop .s{font-size:12px;color:#8a847c;margin-top:3px}
+.badge{font-size:10.5px;padding:3px 10px;border-radius:99px;white-space:nowrap;height:fit-content;font-weight:600;letter-spacing:.02em}
+.paid{background:#e3f6ed;color:#0a6b4b}.late{background:#ffe9ec;color:#a5123a}.due{background:#fdf1d8;color:#8a5a06}
+.amt{display:flex;justify-content:space-between;align-items:flex-end;margin-top:10px}
+.amt b{font-family:ui-monospace,monospace;font-size:25px;color:#06382c;font-weight:500;letter-spacing:-.02em}
+.amt b small{font-size:13px;color:#b0aaa1}
+.amt i{font-style:normal;font-family:ui-monospace,monospace;font-size:11px;color:#8a847c;background:#f6f5f2;padding:3px 8px;border-radius:6px}
+.warn{font-size:11.5px;color:#8a5a06;margin-top:7px}
+.acts{display:grid;grid-template-columns:1fr 1fr 1fr;border-top:1px solid #eeece8}
+.acts button{background:#fff;border:0;border-right:1px solid #eeece8;padding:12px 0;font-size:12px;color:#5c564e;font-weight:500}
+.acts button:active{background:#f6f5f2}
+.acts button:last-child{border-right:0;color:#0a6b4b;font-weight:600}
+button.wide{width:100%;border-radius:12px;padding:13px;font-size:14px;border:0;background:#06382c;color:#fff;font-weight:600}
+button.ghost{width:100%;border-radius:12px;padding:12px;font-size:13px;background:#fff;border:1.5px dashed #a5c5b8;color:#0a6b4b;font-weight:500}
+button.line{border-radius:11px;padding:12px;font-size:13px;background:#fff;border:1px solid #ddd9d3;color:#4a443d;font-weight:500}
+.chart{display:flex;align-items:flex-end;gap:8px;height:128px;padding:12px 2px 0}
+.chart div{flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:5px;height:100%}
+.chart .bars{flex:1;display:flex;align-items:flex-end;gap:3px;width:100%;justify-content:center}
+.chart .bars i{width:42%;background:#e4e1dc;border-radius:3px 3px 0 0;display:block;min-height:2px}
+.chart .bars i.p{background:linear-gradient(180deg,#0a6b4b,#06382c)}
+.chart span{font-family:ui-monospace,monospace;font-size:9.5px;color:#8a847c}
+.legend{display:flex;gap:14px;justify-content:center;margin-top:10px;font-size:10.5px;color:#8a847c}
+.legend i{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:5px;vertical-align:-1px}
+nav{position:fixed;bottom:0;left:0;right:0;background:rgba(255,255,255,.97);backdrop-filter:blur(12px);border-top:1px solid #e9e7e3;display:grid;grid-template-columns:repeat(4,1fr);padding:6px 6px calc(env(safe-area-inset-bottom) + 6px)}
+nav button{background:none;border:0;padding:9px 0;font-size:11px;color:#a5a099;border-radius:10px;font-weight:500}
+nav button.on{color:#06382c;font-weight:700;background:#eef2ef}
+label{display:block;margin-bottom:14px}
+label span{display:block;font-size:10.5px;text-transform:uppercase;letter-spacing:.08em;color:#8a847c;margin-bottom:6px;font-weight:600}
+label em{display:block;font-style:normal;font-family:ui-monospace,monospace;font-size:11px;color:#8a847c;margin-top:5px}
+input{width:100%;border:1px solid #ddd9d3;border-radius:11px;padding:12px;font-family:ui-monospace,monospace;font-size:16px;background:#fff;color:#1c1a17}
+input:focus{outline:2px solid #0a6b4b;outline-offset:-1px;border-color:#0a6b4b}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+#modal{position:fixed;inset:0;background:rgba(20,18,16,.55);display:none;align-items:flex-end;z-index:50}
+#modal.on{display:flex}
+.sheet{background:#f2f2f0;width:100%;max-height:92vh;border-radius:20px 20px 0 0;display:flex;flex-direction:column;overflow:hidden}
+.shead{display:flex;justify-content:space-between;align-items:center;padding:16px 18px 13px;border-bottom:1px solid #e9e7e3;background:#fff}
+.shead h2{font-size:17px;color:#06382c}
+.sbody{overflow-y:auto;padding:18px;flex:1}
+.sfoot{padding:14px 18px calc(env(safe-area-inset-bottom) + 14px);border-top:1px solid #e9e7e3;background:#fff}
+.total{background:linear-gradient(155deg,#0a4536,#022c22);color:#f7f7f5;border-radius:16px;padding:16px;margin-bottom:18px}
+.total .lbl{color:#7fcaad}
+.total p{margin:6px 0 0;font-family:ui-monospace,monospace;font-size:30px;letter-spacing:-.02em}
+pre{white-space:pre-wrap;font-family:ui-monospace,monospace;font-size:12.5px;line-height:1.65;background:#fff;border:1px solid #e9e7e3;border-radius:14px;padding:15px;margin:0;color:#2b2823}
+.msgimg{width:100%;border-radius:14px;border:1px solid #e9e7e3;margin-top:8px}
+#toast{position:fixed;bottom:96px;left:0;right:0;display:flex;justify-content:center;z-index:60;pointer-events:none}
+#toast b{background:#06382c;color:#f7f7f5;font-family:ui-monospace,monospace;font-size:12.5px;padding:10px 18px;border-radius:99px;font-weight:400;opacity:0;transition:opacity .2s;box-shadow:0 4px 14px rgba(0,0,0,.2)}
+#toast b.on{opacity:1}
+</style>
+</head>
+<body>
+<header>
+  <div class="hrow"><h1>Sổ thu tiền nhà</h1><span id="count"></span></div>
+  <div class="mnav">
+    <button data-act="pm">‹</button><div class="mono" id="period-label"></div><button data-act="nm">›</button>
+  </div>
+</header>
+<main id="main"></main>
+<nav>
+  <button data-act="tab" data-tab="home">Tổng quan</button>
+  <button data-act="tab" data-tab="bills">Kỳ thu</button>
+  <button data-act="tab" data-tab="places">Căn hộ</button>
+  <button data-act="tab" data-tab="setup">Cài đặt</button>
+</nav>
+<div id="modal"><div class="sheet">
+  <div class="shead"><h2 id="stitle"></h2><button data-act="close" style="background:none;border:0;font-size:22px;color:#78716c">✕</button></div>
+  <div class="sbody" id="sbody"></div>
+  <div class="sfoot" id="sfoot"></div>
+</div></div>
+<div id="toast"><b id="toastb"></b></div>
+
+<script>
+/* ---------- helpers ---------- */
+const KEY="sothutiennha-v2";
+const money=n=>Math.round(Number(n)||0).toLocaleString("vi-VN");
+const num=n=>(Number(n)||0).toLocaleString("vi-VN",{maximumFractionDigits:1});
+const toNum=s=>Number(String(s).replace(/[^\d.,]/g,"").replace(",","."))||0;
+const toInt=s=>Number(String(s).replace(/\D/g,""))||0;
+const ym=d=>d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0");
+const ymLabel=p=>"Tháng "+p.slice(5)+"/"+p.slice(0,4);
+const shift=(p,k)=>{const[y,m]=p.split("-").map(Number);return ym(new Date(y,m-1+k,1))};
+const dueDateOf=(p,day)=>{const[y,m]=p.split("-").map(Number);const last=new Date(y,m,0).getDate();return new Date(y,m-1,Math.min(Number(day)||1,last))};
+const dmy=d=>String(d.getDate()).padStart(2,"0")+"/"+String(d.getMonth()+1).padStart(2,"0")+"/"+d.getFullYear();
+const uid=()=>Math.random().toString(36).slice(2,9);
+const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+function daysTo(d){const t=new Date();t.setHours(0,0,0,0);return Math.round((d-t)/86400000)}
+const parseVnDate=s=>{const m=/^(\d{2})\/(\d{2})\/(\d{4})$/.exec(String(s||"").trim());return m?new Date(+m[3],+m[2]-1,+m[1]):null};
+
+/* ---------- dữ liệu ban đầu ---------- */
+const SEED_PROPS=[
+ {id:"p102",name:"Căn hộ 102",tenant:"Phương Anh và Hiền",phone:"",rent:4500000,deposit:0,dueDay:1,people:2,elecPrice:3500,waterPer:50000,netPer:50000,elecIndex:12,start:"01/05/2026",end:"01/11/2026"},
+ {id:"p201",name:"Căn hộ 201",tenant:"Hưng",phone:"",rent:9000000,deposit:0,dueDay:15,people:3,elecPrice:3500,waterPer:50000,netPer:50000,elecIndex:0,start:"17/05/2026",end:"17/05/2027"},
+ {id:"p202",name:"Căn hộ 202",tenant:"Đỗ Diệu Hương, Phạm Thanh Hà",phone:"0397590756",rent:5000000,deposit:0,dueDay:15,people:2,elecPrice:3500,waterPer:50000,netPer:50000,elecIndex:20,start:"15/04/2026",end:"15/04/2027"},
+ {id:"p301",name:"Căn hộ 301",tenant:"Vũ Minh Hiếu",phone:"",rent:9900000,deposit:0,dueDay:25,people:4,elecPrice:3500,waterPer:50000,netPer:50000,elecIndex:43,start:"22/03/2026",end:"22/03/2027"},
+ {id:"p302",name:"Căn hộ 302",tenant:"Huyền và Tú",phone:"",rent:5000000,deposit:0,dueDay:1,people:2,elecPrice:3500,waterPer:50000,netPer:50000,elecIndex:26,start:"01/05/2026",end:"01/05/2027"}];
+const SEED_ROWS=[
+ ["p102","2026-06",12,156],["p102","2026-07",156,390],["p102","2026-08",390,568],
+ ["p201","2026-06",0,392],["p201","2026-07",392,698],
+ ["p202","2026-05",20,140.9],["p202","2026-06",140.9,306],["p202","2026-07",306,496],
+ ["p301","2026-04",43,553.6],["p301","2026-05",553.6,1014],["p301","2026-06",1014,1727],["p301","2026-07",1727,2072],
+ ["p302","2026-06",26,307],["p302","2026-07",307,595],["p302","2026-08",595,824]];
+function seedData(){
+ const by={};SEED_PROPS.forEach(p=>by[p.id]=p);
+ const invoices=SEED_ROWS.map(([pid,period,s,e])=>{const p=by[pid];return{id:uid(),propertyId:pid,period,rent:p.rent,elecPrice:p.elecPrice,elecStart:s,elecEnd:e,people:p.people,waterPer:p.waterPer,netPer:p.netPer,otherAmount:0,otherNote:"",paid:true,paidDate:""}});
+ return{properties:JSON.parse(JSON.stringify(SEED_PROPS)),invoices,settings:{ownerName:"",bankName:"",accountNumber:"",accountName:""}};
+}
+
+/* ---------- state ---------- */
+let state,ui={tab:"home",period:ym(new Date()),msgIds:[],imgs:{}};
+try{const raw=localStorage.getItem(KEY);state=raw?JSON.parse(raw):null}catch(e){state=null}
+if(!state||!state.properties||!state.properties.length)state=seedData();
+const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(state))}catch(e){toast("Không lưu được")}};
+const P=id=>state.properties.find(p=>p.id===id)||{};
+const I=id=>state.invoices.find(i=>i.id===id);
+function toast(t){const b=document.getElementById("toastb");b.textContent=t;b.classList.add("on");setTimeout(()=>b.classList.remove("on"),1800)}
+
+const ROUND=10000;
+function calc(inv){
+ const eU=Math.max(0,(Number(inv.elecEnd)||0)-(Number(inv.elecStart)||0));
+ const elec=eU*(Number(inv.elecPrice)||0);
+ const water=(Number(inv.people)||0)*(Number(inv.waterPer)||0);
+ const net=(Number(inv.people)||0)*(Number(inv.netPer)||0);
+ const raw=(Number(inv.rent)||0)+elec+water+net+(Number(inv.otherAmount)||0);
+ const total=Math.floor(raw/ROUND)*ROUND;
+ return{eU,elec,water,net,raw,adj:total-raw,total};
+}
+const statusOf=(inv,p)=>inv.paid?"paid":(new Date(new Date().setHours(0,0,0,0))>dueDateOf(inv.period,p.dueDay)?"late":"due");
+const noIndex=i=>Number(i.elecEnd)===Number(i.elecStart);
+function groups(list){
+ const m={};list.forEach(i=>{const d=Number(P(i.propertyId).dueDay)||1;(m[d]=m[d]||[]).push(i)});
+ return Object.keys(m).map(Number).sort((a,b)=>a-b).map(day=>({day,items:m[day]}));
+}
+
+/* ---------- views ---------- */
+function viewHome(){
+ const list=state.invoices.filter(i=>i.period===ui.period);
+ let must=0,got=0,late=0;
+ list.forEach(i=>{const t=calc(i).total;must+=t;if(i.paid)got+=t;else if(statusOf(i,P(i.propertyId))==="late")late+=t});
+ let h=`<div class="hero"><div class="lbl">Còn phải thu</div>
+ <div class="big">${money(must-got)}<small> đ</small></div>
+ <div class="bar"><i style="width:${must?got/must*100:0}%"></i></div>
+ <div class="g3"><span>Tổng ${money(must)}</span><span>Đã thu ${money(got)}</span><span>Quá hạn ${money(late)}</span></div></div>`;
+ h+=viewBreakdown(list);
+ h+=viewTodo(list);
+ h+=list.length?viewGroups(list):`<button class="wide" data-act="create">Mở kỳ thu ${ymLabel(ui.period)}</button>`;
+ h+=viewChart();
+ return h;
+}
+function viewBreakdown(list){
+ if(!list.length)return"";
+ let rent=0,elec=0,water=0,net=0,other=0,kwh=0,adj=0,total=0;
+ list.forEach(i=>{const c=calc(i);rent+=Number(i.rent)||0;elec+=c.elec;water+=c.water;net+=c.net;other+=Number(i.otherAmount)||0;kwh+=c.eU;adj+=c.adj;total+=c.total});
+ const rows=[["Tiền phòng",rent,""],["Tiền điện",elec,num(kwh)+" kWh"],["Tiền nước",water,""],["Tiền net",net,""]];
+ if(other)rows.push(["Khoản khác",other,""]);
+ if(adj)rows.push(["Làm tròn",adj,""]);
+ const pc=x=>total?Math.round(x/total*100)+"%":"0%";
+ return`<div class="card pad"><div class="lbl">Cơ cấu kỳ này</div><table class="bd">
+ ${rows.map(([l,x,extra])=>`<tr><td>${l}${extra?' <span style="color:#a8a29e">· '+extra+'</span>':""}</td><td>${money(x)}</td><td>${pc(x)}</td></tr>`).join("")}
+ <tr><td>Tổng cộng</td><td>${money(total)}</td><td></td></tr></table></div>`;
+}
+function viewTodo(list){
+ const jobs=[];
+ groups(list).forEach(({day,items})=>{
+  const left=daysTo(dueDateOf(ui.period,day)),miss=items.filter(noIndex).length,un=items.filter(i=>!i.paid).length;
+  if(miss&&left<=3)jobs.push([left<=1,`Ghi công tơ cụm ngày ${day} — ${miss} căn${left<0?"":", còn "+left+" ngày"}`]);
+  if(un&&left<0)jobs.push([true,`Cụm ngày ${day} quá hạn ${-left} ngày — ${un} căn chưa thu`]);
+  else if(un&&left>=0&&left<=1&&!miss)jobs.push([false,`Gửi thông báo cụm ngày ${day} — ${un} căn`]);
+ });
+ state.properties.forEach(p=>{const e=parseVnDate(p.end);if(!e)return;const d=daysTo(e);
+  if(d>=0&&d<=75)jobs.push([d<=30,`Hợp đồng ${p.name} hết hạn ${dmy(e)} — còn ${d} ngày`]);
+  if(d<0)jobs.push([true,`Hợp đồng ${p.name} đã hết hạn ${dmy(e)}`]);});
+ if(!jobs.length)return"";
+ return`<div class="card todo"><div class="lbl" style="padding:12px 14px 6px">Việc cần làm</div>${jobs.map(([u,t])=>`<p class="${u?"u":""}">${esc(t)}</p>`).join("")}</div>`;
+}
+function viewGroups(list){
+ return groups(list).map(({day,items})=>{
+  const un=items.filter(i=>!i.paid),left=un.reduce((s,i)=>s+calc(i).total,0),dl=daysTo(dueDateOf(ui.period,day));
+  const note=un.length?(dl>=0?"còn "+dl+" ngày":"quá "+(-dl)+" ngày"):"đã thu đủ";
+  const amt=un.length?money(left)+" đ":"✓";
+  return`<section><div class="ghead"><h3>Thu ngày ${String(day).padStart(2,"0")}<em>${items.length} căn · ${note}</em></h3><b>${amt}</b></div>
+  ${items.map(rowHtml).join("")}
+  ${un.length>1?`<button class="ghost" data-act="msggroup" data-day="${day}">Soạn thông báo cả cụm (${un.length} căn)</button>`:""}</section>`;
+ }).join("");
+}
+function rowHtml(i){
+ const p=P(i.propertyId),c=calc(i),st=statusOf(i,p);
+ const txt={paid:"Đã thu",late:"Quá hạn",due:"Chờ thu"}[st];
+ return`<div class="card row r-${st}"><div class="rtop" data-act="open" data-id="${i.id}">
+ <div class="t"><div><div class="n">${esc(p.name)}</div><div class="s">${esc(p.tenant)} · hạn ${dmy(dueDateOf(i.period,p.dueDay))}</div></div><span class="badge ${st}">${txt}</span></div>
+ <div class="amt"><b>${money(c.total)}<small> đ</small></b><i>${num(c.eU)} kWh · ${i.people} người</i></div>
+ ${noIndex(i)?'<div class="warn">Chưa nhập chỉ số điện cuối kỳ</div>':""}</div>
+ <div class="acts"><button data-act="open" data-id="${i.id}">Ghi chỉ số</button><button data-act="msg" data-id="${i.id}">Thông báo</button><button data-act="paid" data-id="${i.id}">${i.paid?"Bỏ đã thu":"Đã thu"}</button></div></div>`;
+}
+function viewChart(){
+ const cols=[];for(let k=5;k>=0;k--){const p=shift(ui.period,-k),r=state.invoices.filter(i=>i.period===p);
+  cols.push({n:p.slice(5)+"/"+p.slice(2,4),m:r.reduce((s,i)=>s+calc(i).total,0),g:r.filter(i=>i.paid).reduce((s,i)=>s+calc(i).total,0)})}
+ const max=Math.max(1,...cols.map(c=>c.m));
+ return`<div class="card pad"><div class="lbl">6 tháng gần nhất</div><div class="chart">${cols.map(c=>`<div><div class="bars"><i style="height:${c.m/max*100}%"></i><i class="p" style="height:${c.g/max*100}%"></i></div><span>${c.n}</span></div>`).join("")}</div>
+ <div class="legend"><span><i style="background:#e4e1dc"></i>Phải thu</span><span><i style="background:#06382c"></i>Đã thu</span></div></div>`;
+}
+function viewBills(){
+ const list=state.invoices.filter(i=>i.period===ui.period);
+ return`<button class="ghost" data-act="create">Mở kỳ thu ${ymLabel(ui.period)}</button>`+
+  (list.length?viewGroups(list):`<p style="text-align:center;color:#78716c;font-size:14px;padding:24px 0">Chưa có hoá đơn nào trong kỳ này.</p>`);
+}
+function viewPlaces(){
+ return`<button class="ghost" data-act="addprop">+ Thêm căn hộ</button>`+state.properties.map(p=>`
+ <div class="card pad" data-act="editprop" data-id="${p.id}">
+  <div class="t" style="display:flex;justify-content:space-between;gap:8px"><div><div class="n serif" style="font-size:16px;color:#022c22">${esc(p.name)}</div><div class="s" style="font-size:12px;color:#78716c">${esc(p.tenant)}${p.phone?" · "+esc(p.phone):""}</div></div><b class="mono" style="font-size:14px;color:#065f46;font-weight:400">${money(p.rent)} đ</b></div>
+  <div class="mono" style="font-size:11px;color:#78716c;margin-top:8px;display:flex;flex-wrap:wrap;gap:2px 12px"><span>Thu ngày ${p.dueDay}</span><span>${p.people} người</span><span>Điện ${money(p.elecPrice)}/kWh</span><span>Nước+net ${money(p.waterPer+p.netPer)}/người</span>${p.end?`<span>HĐ đến ${esc(p.end)}</span>`:""}</div>
+ </div>`).join("");
+}
+function viewSetup(){
+ const s=state.settings;
+ return`<div class="card pad"><h3 style="margin-bottom:8px">Tài khoản nhận tiền</h3>
+ <p style="font-size:12px;color:#78716c;margin:0 0 12px">Tự động chèn vào mọi thông báo thu tiền.</p>
+ <label><span>Chủ tài khoản</span><input id="s_accountName" value="${esc(s.accountName)}"></label>
+ <label><span>Số tài khoản</span><input id="s_accountNumber" inputmode="numeric" value="${esc(s.accountNumber)}"></label>
+ <label><span>Ngân hàng</span><input id="s_bankName" value="${esc(s.bankName)}"></label>
+ <label><span>Tên người gửi</span><input id="s_ownerName" value="${esc(s.ownerName)}"></label>
+ <button class="wide" data-act="savesettings">Lưu</button></div>
+ <div class="card pad"><h3 style="margin-bottom:8px">Sao lưu</h3>
+ <p style="font-size:12px;color:#78716c;margin:0 0 12px">Dữ liệu nằm trong máy. Nên tải bản sao lưu mỗi quý.</p>
+ <div class="two"><button class="line" data-act="export">Tải file</button><button class="line" data-act="importbtn">Nạp lại</button></div>
+ <input type="file" id="importfile" accept="application/json" style="display:none">
+ </div>`;
+}
+
+/* ---------- render ---------- */
+function render(){
+ document.getElementById("period-label").textContent=ymLabel(ui.period);
+ document.getElementById("count").textContent=state.properties.length+" căn hộ";
+ document.getElementById("main").innerHTML={home:viewHome,bills:viewBills,places:viewPlaces,setup:viewSetup}[ui.tab]();
+ document.querySelectorAll("nav button").forEach(b=>b.classList.toggle("on",b.dataset.tab===ui.tab));
+ const f=document.getElementById("importfile");if(f)f.onchange=importJson;
+}
+
+/* ---------- modal ---------- */
+function openSheet(title,body,foot){
+ document.getElementById("stitle").textContent=title;
+ document.getElementById("sbody").innerHTML=body;
+ document.getElementById("sfoot").innerHTML=foot||"";
+ document.getElementById("modal").classList.add("on");
+}
+const closeSheet=()=>document.getElementById("modal").classList.remove("on");
+
+function invSheet(id){
+ const i=I(id),p=P(i.propertyId),c=calc(i);
+ openSheet(p.name+" · "+ymLabel(i.period),`
+ <div class="total"><div class="lbl">Tổng cộng</div><p id="tot">${money(c.total)} đ</p></div>
+ <div class="two"><label><span>Chỉ số điện đầu kỳ</span><input id="f_elecStart" inputmode="decimal" value="${i.elecStart}"></label>
+ <label><span>Chỉ số điện cuối kỳ</span><input id="f_elecEnd" inputmode="decimal" value="${i.elecEnd}"><em id="e_hint">${num(c.eU)} kWh · ${money(c.elec)} đ</em></label></div>
+ <label><span>Tiền phòng</span><input id="f_rent" inputmode="numeric" value="${i.rent}"></label>
+ <label><span>Số người ở trong kỳ</span><input id="f_people" inputmode="numeric" value="${i.people}"><em>Nước ${money(c.water)} đ · Net ${money(c.net)} đ</em></label>
+ <div class="two"><label><span>Khoản khác</span><input id="f_other" inputmode="numeric" value="${i.otherAmount||""}"></label>
+ <label><span>Diễn giải</span><input id="f_othernote" value="${esc(i.otherNote)}"></label></div>`,
+ `<button class="wide" data-act="saveinv" data-id="${id}">Lưu hoá đơn</button>`);
+ ["f_elecStart","f_elecEnd","f_rent","f_people","f_other"].forEach(k=>{const el=document.getElementById(k);el.oninput=()=>{
+   const t={...i,elecStart:toNum(v("f_elecStart")),elecEnd:toNum(v("f_elecEnd")),rent:toInt(v("f_rent")),people:toInt(v("f_people")),otherAmount:toInt(v("f_other"))};
+   const cc=calc(t);document.getElementById("tot").textContent=money(cc.total)+" đ";
+   document.getElementById("e_hint").textContent=num(cc.eU)+" kWh · "+money(cc.elec)+" đ";}});
+}
+const v=id=>document.getElementById(id).value;
+
+function propSheet(id){
+ const isNew=!id;
+ const p=isNew?{id:uid(),name:"",tenant:"",phone:"",rent:0,deposit:0,dueDay:1,people:1,elecPrice:3500,waterPer:50000,netPer:50000,elecIndex:0,start:"",end:""}:P(id);
+ openSheet(isNew?"Thêm căn hộ":"Sửa thông tin",`
+ <label><span>Tên căn hộ</span><input id="p_name" value="${esc(p.name)}"></label>
+ <div class="two"><label><span>Người thuê</span><input id="p_tenant" value="${esc(p.tenant)}"></label>
+ <label><span>Điện thoại</span><input id="p_phone" inputmode="tel" value="${esc(p.phone)}"></label></div>
+ <div class="two"><label><span>Bắt đầu HĐ</span><input id="p_start" placeholder="01/05/2026" value="${esc(p.start)}"></label>
+ <label><span>Hết hạn HĐ</span><input id="p_end" placeholder="01/11/2026" value="${esc(p.end)}"></label></div>
+ <label><span>Tiền phòng / tháng</span><input id="p_rent" inputmode="numeric" value="${p.rent}"></label>
+ <div class="two"><label><span>Ngày đóng tiền</span><input id="p_dueDay" inputmode="numeric" value="${p.dueDay}"></label>
+ <label><span>Số người ở</span><input id="p_people" inputmode="numeric" value="${p.people}"></label></div>
+ <label><span>Đơn giá điện /kWh</span><input id="p_elecPrice" inputmode="numeric" value="${p.elecPrice}"></label>
+ <div class="two"><label><span>Nước /người</span><input id="p_waterPer" inputmode="numeric" value="${p.waterPer}"></label>
+ <label><span>Net /người</span><input id="p_netPer" inputmode="numeric" value="${p.netPer}"></label></div>
+ <div class="two"><label><span>Tiền cọc</span><input id="p_deposit" inputmode="numeric" value="${p.deposit}"></label>
+ <label><span>Chỉ số điện hiện tại</span><input id="p_elecIndex" inputmode="decimal" value="${p.elecIndex}"></label></div>
+ <p style="font-size:12px;color:#78716c">Chỉ số hiện tại chỉ dùng cho kỳ thu đầu tiên.</p>`,
+ `<div style="display:flex;gap:8px">${isNew?"":`<button class="line" data-act="delprop" data-id="${p.id}" style="color:#be123c;border-color:#fda4af">Xoá</button>`}<button class="wide" data-act="saveprop" data-id="${p.id}" style="flex:1">Lưu</button></div>`);
+}
+
+function buildMessage(i){
+ const p=P(i.propertyId),c=calc(i),st=state.settings,L=[];
+ L.push("THÔNG BÁO THU TIỀN NHÀ — "+(p.name||"").toUpperCase());
+ L.push("Kỳ "+ymLabel(i.period).toLowerCase()+" · Người thuê: "+(p.tenant||""));
+ L.push("1. Tiền phòng: "+money(i.rent)+" đ");
+ L.push("2. Tiền điện: "+num(i.elecStart)+" → "+num(i.elecEnd)+" = "+num(c.eU)+" kWh x "+money(i.elecPrice)+" = "+money(c.elec)+" đ");
+ L.push("3. Tiền nước: "+i.people+" x "+money(i.waterPer)+" = "+money(c.water)+" đ");
+ L.push("4. Tiền net: "+i.people+" x "+money(i.netPer)+" = "+money(c.net)+" đ");
+ if(i.otherAmount)L.push("5. "+(i.otherNote||"Khoản khác")+": "+money(i.otherAmount)+" đ");
+ if(c.adj)L.push("Làm tròn: "+(c.adj>0?"+":"-")+money(Math.abs(c.adj))+" đ");
+ L.push("TỔNG CỘNG: "+money(c.total)+" đ");
+ L.push("Hạn đóng tiền: "+dmy(dueDateOf(i.period,p.dueDay)));
+ if(st.accountNumber)L.push("Chuyển khoản: "+st.accountNumber+" - "+st.bankName+" - "+st.accountName);
+ L.push("Nội dung CK: "+(p.name||"").replace(/\s+/g,"")+" "+i.period);
+ L.push("Trân trọng cảm ơn!"+(st.ownerName?" "+st.ownerName:""));
+ return L.join("\n");
+}
+function msgSheet(ids){
+ ui.msgIds=ids;ui.imgs={};
+ const body=ids.map(id=>{const i=I(id),p=P(i.propertyId);
+  return`<div style="margin-bottom:16px"><div class="serif" style="font-size:14px;color:#022c22;margin:0 0 6px 4px">${esc(p.name)}${p.phone?" · "+esc(p.phone):""}</div>
+  <pre id="msg_${id}">${esc(buildMessage(i))}</pre>
+  <div class="two" style="margin-top:8px"><button class="wide" data-act="copy" data-id="${id}" style="padding:9px;font-size:13px">Chép tin nhắn</button>
+  <button class="line" data-act="img" data-id="${id}">Tạo ảnh phiếu thu</button></div>
+  <div id="imgwrap_${id}"></div></div>`}).join("");
+ openSheet(ids.length>1?"Thông báo "+ids.length+" căn":"Thông báo thu tiền",body,"");
+}
+
+function drawInvoice(id){
+ const i=I(id),p=P(i.propertyId),c=calc(i),st=state.settings;
+ const rows=[["1. Tiền phòng",money(i.rent)+" đ"],
+  ["2. Tiền điện: "+num(i.elecStart)+" → "+num(i.elecEnd)+" = "+num(c.eU)+" kWh",money(c.elec)+" đ"],
+  ["3. Tiền nước: "+i.people+" x "+money(i.waterPer),money(c.water)+" đ"],
+  ["4. Tiền net: "+i.people+" x "+money(i.netPer),money(c.net)+" đ"]];
+ if(i.otherAmount)rows.push(["5. "+(i.otherNote||"Khoản khác"),money(i.otherAmount)+" đ"]);
+ if(c.adj)rows.push(["Làm tròn",(c.adj>0?"+":"-")+money(Math.abs(c.adj))+" đ"]);
+ const W=720,S=2,H=420+rows.length*44+(st.accountNumber?90:0);
+ const cv=document.createElement("canvas");cv.width=W*S;cv.height=H*S;
+ const x=cv.getContext("2d");x.scale(S,S);
+ x.fillStyle="#fafaf9";x.fillRect(0,0,W,H);
+ x.fillStyle="#022c22";x.fillRect(0,0,W,112);
+ x.fillStyle="#fafaf9";x.font="600 30px Georgia, serif";x.fillText("THÔNG BÁO THU TIỀN NHÀ",40,52);
+ x.font="20px ui-monospace, monospace";x.fillStyle="#a7f3d0";x.fillText(p.name+" · Kỳ "+ymLabel(i.period).toLowerCase(),40,86);
+ let y=158;x.fillStyle="#1c1917";x.font="16px ui-monospace, monospace";
+ x.fillText("Người thuê: "+(p.tenant||""),40,y);
+ if(p.phone){y+=24;x.fillText("SĐT: "+p.phone,40,y)}
+ y+=24;x.fillText("Ngày đóng tiền theo HĐ: ngày "+p.dueDay,40,y);
+ y+=30;x.strokeStyle="#d6d3d1";x.beginPath();x.moveTo(40,y);x.lineTo(W-40,y);x.stroke();y+=34;
+ rows.forEach(([l,r])=>{x.fillStyle="#44403c";x.font="16px ui-monospace, monospace";x.textAlign="left";x.fillText(l,40,y);
+  x.fillStyle="#1c1917";x.font="17px ui-monospace, monospace";x.textAlign="right";x.fillText(r,W-40,y);x.textAlign="left";y+=44});
+ y+=6;x.fillStyle="#022c22";x.fillRect(40,y-30,W-80,66);
+ x.fillStyle="#fafaf9";x.font="600 20px Georgia, serif";x.fillText("TỔNG CỘNG",60,y+8);
+ x.textAlign="right";x.font="600 30px ui-monospace, monospace";x.fillText(money(c.total)+" đ",W-60,y+10);x.textAlign="left";y+=76;
+ x.fillStyle="#44403c";x.font="16px ui-monospace, monospace";x.fillText("Hạn đóng tiền: "+dmy(dueDateOf(i.period,p.dueDay)),40,y);
+ if(st.accountNumber){y+=30;x.fillText(st.bankName+" · "+st.accountNumber,40,y);y+=26;x.fillText(st.accountName,40,y)}
+ y+=38;x.fillStyle="#78716c";x.font="15px Georgia, serif";x.fillText("Trân trọng cảm ơn!",40,y);
+ return cv.toDataURL("image/png");
+}
+
+/* ---------- actions ---------- */
+function createPeriod(){
+ const prev=shift(ui.period,-1);let n=0;
+ state.properties.forEach(p=>{
+  if(state.invoices.some(i=>i.period===ui.period&&i.propertyId===p.id))return;
+  const last=state.invoices.find(i=>i.period===prev&&i.propertyId===p.id);
+  const s=last?Number(last.elecEnd)||0:Number(p.elecIndex)||0;
+  state.invoices.push({id:uid(),propertyId:p.id,period:ui.period,rent:p.rent,elecPrice:p.elecPrice,elecStart:s,elecEnd:s,people:p.people,waterPer:p.waterPer,netPer:p.netPer,otherAmount:0,otherNote:"",paid:false,paidDate:""});n++});
+ save();render();toast(n?"Đã mở "+n+" hoá đơn":"Kỳ này đã mở rồi");
+}
+function exportJson(){
+ const b=new Blob([JSON.stringify(state,null,2)],{type:"application/json"});
+ const a=document.createElement("a");a.href=URL.createObjectURL(b);a.download="sothutiennha-"+ym(new Date())+".json";a.click();toast("Đã tải bản sao lưu");
+}
+function importJson(e){
+ const f=e.target.files[0];if(!f)return;const r=new FileReader();
+ r.onload=()=>{try{const d=JSON.parse(r.result);if(!d.properties)throw 0;state=d;save();render();toast("Đã nạp dữ liệu")}catch(x){toast("File không hợp lệ")}};
+ r.readAsText(f);
+}
+async function copyText(t){
+ try{await navigator.clipboard.writeText(t)}catch(e){
+  const ta=document.createElement("textarea");ta.value=t;document.body.appendChild(ta);ta.select();document.execCommand("copy");ta.remove()}
+ toast("Đã chép tin nhắn");
+}
+
+document.body.addEventListener("click",e=>{
+ const el=e.target.closest("[data-act]");if(!el)return;
+ const a=el.dataset.act,id=el.dataset.id;
+ if(a==="tab"){ui.tab=el.dataset.tab;render()}
+ else if(a==="pm"){ui.period=shift(ui.period,-1);render()}
+ else if(a==="nm"){ui.period=shift(ui.period,1);render()}
+ else if(a==="close")closeSheet();
+ else if(a==="create")createPeriod();
+ else if(a==="open")invSheet(id);
+ else if(a==="msg")msgSheet([id]);
+ else if(a==="msggroup"){const d=Number(el.dataset.day);
+  msgSheet(state.invoices.filter(i=>i.period===ui.period&&!i.paid&&Number(P(i.propertyId).dueDay)===d).map(i=>i.id))}
+ else if(a==="paid"){const i=I(id);i.paid=!i.paid;i.paidDate=i.paid?dmy(new Date()):"";save();render()}
+ else if(a==="saveinv"){const i=I(id);
+  Object.assign(i,{elecStart:toNum(v("f_elecStart")),elecEnd:toNum(v("f_elecEnd")),rent:toInt(v("f_rent")),people:toInt(v("f_people")),otherAmount:toInt(v("f_other")),otherNote:v("f_othernote")});
+  save();closeSheet();render();toast("Đã lưu")}
+ else if(a==="addprop")propSheet(null);
+ else if(a==="editprop")propSheet(id);
+ else if(a==="saveprop"){
+  const p={id,name:v("p_name"),tenant:v("p_tenant"),phone:v("p_phone"),start:v("p_start"),end:v("p_end"),
+   rent:toInt(v("p_rent")),dueDay:toInt(v("p_dueDay")),people:toInt(v("p_people")),elecPrice:toInt(v("p_elecPrice")),
+   waterPer:toInt(v("p_waterPer")),netPer:toInt(v("p_netPer")),deposit:toInt(v("p_deposit")),elecIndex:toNum(v("p_elecIndex"))};
+  const k=state.properties.findIndex(x=>x.id===id);
+  if(k>=0)state.properties[k]=p;else state.properties.push(p);
+  save();closeSheet();render();toast("Đã lưu")}
+ else if(a==="delprop"){
+  state.properties=state.properties.filter(p=>p.id!==id);
+  state.invoices=state.invoices.filter(i=>i.propertyId!==id);
+  save();closeSheet();render();toast("Đã xoá")}
+ else if(a==="copy")copyText(buildMessage(I(id)));
+ else if(a==="img"){
+  const w=document.getElementById("imgwrap_"+id);
+  if(!ui.imgs[id]){ui.imgs[id]=drawInvoice(id);
+   w.innerHTML='<p style="font-size:12px;color:#78716c;margin:8px 0 0">Nhấn giữ vào ảnh để lưu rồi gửi qua Zalo.</p><img class="msgimg" src="'+ui.imgs[id]+'">';
+   el.textContent="Tải ảnh về máy";
+  }else{const a2=document.createElement("a");a2.href=ui.imgs[id];a2.download="PhieuThu_"+P(I(id).propertyId).name.replace(/\s+/g,"")+"_"+I(id).period+".png";a2.click()}}
+ else if(a==="savesettings"){
+  state.settings={accountName:v("s_accountName"),accountNumber:v("s_accountNumber"),bankName:v("s_bankName"),ownerName:v("s_ownerName")};
+  save();toast("Đã lưu")}
+ else if(a==="export")exportJson();
+ else if(a==="importbtn")document.getElementById("importfile").click();
+});
+
+render();
+if("serviceWorker"in navigator)navigator.serviceWorker.register("sw.js").catch(()=>{});
+</script>
+</body>
+</html>
