@@ -127,7 +127,7 @@ pre{white-space:pre-wrap;font-family:ui-monospace,monospace;font-size:12.5px;lin
 <script>
 /* ---------- helpers ---------- */
 const KEY="sothutiennha-v2";
-const VERSION="15/11/2026 · bản 3";
+const VERSION="15/11/2026 · bản 4";
 const money=n=>Math.round(Number(n)||0).toLocaleString("vi-VN");
 const num=n=>(Number(n)||0).toLocaleString("vi-VN",{maximumFractionDigits:1});
 const toNum=s=>Number(String(s).replace(/[^\d.,]/g,"").replace(",","."))||0;
@@ -190,6 +190,9 @@ function calc(inv){
 }
 const statusOf=(inv,p)=>inv.paid?"paid":(new Date(new Date().setHours(0,0,0,0))>dueDateOf(inv.period,p.dueDay)?"late":"due");
 const noIndex=i=>Number(i.elecEnd)===Number(i.elecStart);
+/* các ô trong phiếu đang khác thông tin căn hộ */
+const FLD={rent:"tiền phòng",people:"số người",elecPrice:"giá điện",waterPer:"nước/người",netPer:"net/người"};
+const diffs=i=>{const p=P(i.propertyId);return Object.keys(FLD).filter(f=>p[f]!=null&&Number(i[f])!==Number(p[f]))};
 function groups(list){
  const m={};list.forEach(i=>{const d=Number(P(i.propertyId).dueDay)||1;(m[d]=m[d]||[]).push(i)});
  return Object.keys(m).map(Number).sort((a,b)=>a-b).map(day=>({day,items:m[day]}));
@@ -252,7 +255,8 @@ function rowHtml(i){
  return`<div class="card row r-${st}"><div class="rtop" data-act="open" data-id="${i.id}">
  <div class="t"><div><div class="n">${esc(p.name)}</div><div class="s">${esc(p.tenant)} · hạn ${dmy(dueDateOf(i.period,p.dueDay))}</div></div><span class="badge ${st}">${txt}</span></div>
  <div class="amt"><b>${money(c.total)}<small> đ</small></b><i>${num(c.eU)} kWh · ${i.people} người</i></div>
- ${noIndex(i)?'<div class="warn">Chưa nhập chỉ số điện cuối kỳ</div>':""}</div>
+ ${noIndex(i)?'<div class="warn">Chưa nhập chỉ số điện cuối kỳ</div>':""}
+ ${diffs(i).length?'<div class="warn" style="color:#a5123a">Phiếu khác thông tin căn hộ ('+diffs(i).map(f=>FLD[f]).join(", ")+') — bấm Ghi chỉ số để cập nhật</div>':""}</div>
  <div class="acts"><button data-act="open" data-id="${i.id}">Ghi chỉ số</button><button data-act="msg" data-id="${i.id}">Thông báo</button><button data-act="paid" data-id="${i.id}">${i.paid?"Bỏ đã thu":"Đã thu"}</button></div></div>`;
 }
 function viewChart(){
@@ -311,7 +315,11 @@ const closeSheet=()=>document.getElementById("modal").classList.remove("on");
 
 function invSheet(id){
  const i=I(id),p=P(i.propertyId),c=calc(i);
+ const df=diffs(i);
  openSheet(p.name+" · "+ymLabel(i.period),`
+ ${df.length?`<div style="background:#fff5f6;border:1px solid #fda4af;border-radius:14px;padding:12px 14px;margin-bottom:14px;font-size:13px;color:#a5123a">
+  Phiếu này khác thông tin căn hộ:<br>${df.map(f=>"• "+FLD[f]+": phiếu "+money(i[f])+" → căn hộ "+money(p[f])).join("<br>")}
+  <button class="wide" data-act="syncinv" data-id="${id}" style="margin-top:10px;background:#a5123a">Cập nhật phiếu theo căn hộ</button></div>`:""}
  <div class="total"><div class="lbl">Tổng cộng</div><p id="tot">${money(c.total)} đ</p></div>
  <div class="two"><label><span>Chỉ số điện đầu kỳ</span><input id="f_elecStart" inputmode="decimal" value="${i.elecStart}"></label>
  <label><span>Chỉ số điện cuối kỳ</span><input id="f_elecEnd" inputmode="decimal" value="${i.elecEnd}"><em id="e_hint">${num(c.eU)} kWh · ${money(c.elec)} đ</em></label></div>
@@ -463,6 +471,7 @@ document.body.addEventListener("click",e=>{
     nx.elecStart=i.elecEnd;msg="Đã lưu · cập nhật đầu kỳ "+ymLabel(nx.period).toLowerCase()}
    else if(nx&&Number(nx.elecStart)!==Number(i.elecEnd))msg="Đã lưu · lưu ý: đầu kỳ "+ymLabel(nx.period).toLowerCase()+" đang là "+num(nx.elecStart)}
   save();closeSheet();render();toast(msg)}
+ else if(a==="syncinv"){const i=I(id),p=P(i.propertyId);diffs(i).forEach(f=>i[f]=p[f]);save();render();invSheet(id);toast("Đã cập nhật phiếu")}
  else if(a==="addprop")propSheet(null);
  else if(a==="editprop")propSheet(id);
  else if(a==="saveprop"){
