@@ -127,7 +127,7 @@ pre{white-space:pre-wrap;font-family:ui-monospace,monospace;font-size:12.5px;lin
 <script>
 /* ---------- helpers ---------- */
 const KEY="sothutiennha-v2";
-const VERSION="15/11/2026 · bản 2";
+const VERSION="15/11/2026 · bản 3";
 const money=n=>Math.round(Number(n)||0).toLocaleString("vi-VN");
 const num=n=>(Number(n)||0).toLocaleString("vi-VN",{maximumFractionDigits:1});
 const toNum=s=>Number(String(s).replace(/[^\d.,]/g,"").replace(",","."))||0;
@@ -471,8 +471,9 @@ document.body.addEventListener("click",e=>{
    waterPer:toInt(v("p_waterPer")),netPer:toInt(v("p_netPer")),deposit:toInt(v("p_deposit")),elecIndex:toNum(v("p_elecIndex"))};
   const k=state.properties.findIndex(x=>x.id===id);let nUp=0;
   if(k>=0){const old=state.properties[k];
-   const F=["rent","people","elecPrice","waterPer","netPer"].filter(f=>Number(old[f])!==Number(p[f]));
-   if(F.length){
+   /* phiếu chưa thu luôn đồng bộ theo căn hộ (kể cả khi lần sửa trước chưa được áp dụng) */
+   const F=["rent","people","elecPrice","waterPer","netPer"];
+   {
     const apply=i=>{let ch=false;F.forEach(f=>{if(Number(i[f])!==Number(p[f])){i[f]=p[f];ch=true}});if(ch)nUp++};
     /* mọi phiếu CHƯA THU của căn này nhận đơn giá mới */
     state.invoices.forEach(i=>{if(i.propertyId===id&&!i.paid)apply(i)});
