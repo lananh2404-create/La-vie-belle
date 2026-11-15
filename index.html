@@ -162,8 +162,16 @@ function seedData(){
 
 /* ---------- state ---------- */
 let state,ui={tab:"home",period:ym(new Date()),msgIds:[],imgs:{}};
-try{const raw=localStorage.getItem(KEY);state=raw?JSON.parse(raw):null}catch(e){state=null}
-if(!state||!state.properties||!state.properties.length)state=seedData();
+/* chuẩn hoá dữ liệu: bù các phần còn thiếu (dùng khi mở app và khi nạp file sao lưu) */
+function normalize(d){
+ if(!d||typeof d!=="object"||!Array.isArray(d.properties))return null;
+ return{properties:d.properties.filter(p=>p&&p.id),
+  invoices:Array.isArray(d.invoices)?d.invoices.filter(i=>i&&i.id&&i.propertyId&&i.period):[],
+  settings:Object.assign({ownerName:"",bankName:"",accountNumber:"",accountName:""},d.settings||{})};
+}
+let raw=null;try{raw=localStorage.getItem(KEY);state=raw?normalize(JSON.parse(raw)):null}catch(e){state=null}
+/* chỉ nạp dữ liệu mẫu ở lần mở app đầu tiên; xoá hết căn hộ thì giữ nguyên trạng thái trống */
+if(!state)state=raw?{properties:[],invoices:[],settings:normalize({properties:[]}).settings}:seedData();
 const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(state))}catch(e){toast("Không lưu được")}};
 const P=id=>state.properties.find(p=>p.id===id)||{};
 const I=id=>state.invoices.find(i=>i.id===id);
@@ -418,7 +426,8 @@ function exportJson(){
 }
 function importJson(e){
  const f=e.target.files[0];if(!f)return;const r=new FileReader();
- r.onload=()=>{try{const d=JSON.parse(r.result);if(!d.properties)throw 0;state=d;save();render();toast("Đã nạp dữ liệu")}catch(x){toast("File không hợp lệ")}};
+ r.onload=()=>{try{const d=normalize(JSON.parse(r.result));if(!d)throw 0;state=d;save();render();toast("Đã nạp dữ liệu")}catch(x){toast("File không hợp lệ")}
+  e.target.value=""};
  r.readAsText(f);
 }
 async function copyText(t){
@@ -441,8 +450,17 @@ document.body.addEventListener("click",e=>{
   msgSheet(state.invoices.filter(i=>i.period===ui.period&&!i.paid&&Number(P(i.propertyId).dueDay)===d).map(i=>i.id))}
  else if(a==="paid"){const i=I(id);i.paid=!i.paid;i.paidDate=i.paid?dmy(new Date()):"";save();render()}
  else if(a==="saveinv"){const i=I(id);
+  const oldEnd=Number(i.elecEnd);
   Object.assign(i,invForm(),{otherNote:v("f_othernote")});
-  save();closeSheet();render();toast("Đã lưu")}
+  /* chỉ số cuối kỳ đổi -> cập nhật chỉ số đầu kỳ của phiếu kỳ sau (nếu phiếu đó chưa thu) */
+  let msg="Đã lưu";
+  if(Number(i.elecEnd)!==oldEnd){
+   const nx=state.invoices.find(x=>x.propertyId===i.propertyId&&x.period===shift(i.period,1));
+   if(nx&&!nx.paid&&Number(nx.elecStart)===oldEnd){
+    if(Number(nx.elecEnd)===Number(nx.elecStart))nx.elecEnd=i.elecEnd;
+    nx.elecStart=i.elecEnd;msg="Đã lưu · cập nhật đầu kỳ "+ymLabel(nx.period).toLowerCase()}
+   else if(nx&&Number(nx.elecStart)!==Number(i.elecEnd))msg="Đã lưu · lưu ý: đầu kỳ "+ymLabel(nx.period).toLowerCase()+" đang là "+num(nx.elecStart)}
+  save();closeSheet();render();toast(msg)}
  else if(a==="addprop")propSheet(null);
  else if(a==="editprop")propSheet(id);
  else if(a==="saveprop"){
@@ -451,13 +469,20 @@ document.body.addEventListener("click",e=>{
    waterPer:toInt(v("p_waterPer")),netPer:toInt(v("p_netPer")),deposit:toInt(v("p_deposit")),elecIndex:toNum(v("p_elecIndex"))};
   const k=state.properties.findIndex(x=>x.id===id);let nUp=0;
   if(k>=0){const old=state.properties[k];
-   /* cập nhật các phiếu CHƯA THU của căn này; ô nào đã sửa tay trong phiếu thì giữ nguyên */
-   state.invoices.forEach(i=>{if(i.propertyId!==id||i.paid)return;let ch=false;
-    ["rent","people","elecPrice","waterPer","netPer"].forEach(f=>{if(Number(i[f])===Number(old[f])&&Number(old[f])!==Number(p[f])){i[f]=p[f];ch=true}});
-    if(ch)nUp++});
+   const F=["rent","people","elecPrice","waterPer","netPer"].filter(f=>Number(old[f])!==Number(p[f]));
+   if(F.length){
+    const apply=i=>{let ch=false;F.forEach(f=>{if(Number(i[f])!==Number(p[f])){i[f]=p[f];ch=true}});if(ch)nUp++};
+    /* mọi phiếu CHƯA THU của căn này nhận đơn giá mới */
+    state.invoices.forEach(i=>{if(i.propertyId===id&&!i.paid)apply(i)});
+    /* phiếu ĐÃ THU của kỳ đang xem: hỏi trước khi sửa (tránh làm sai số liệu đã thu) */
+    const cur=state.invoices.find(i=>i.propertyId===id&&i.period===ui.period&&i.paid&&F.some(f=>Number(i[f])!==Number(p[f])));
+    if(cur&&confirm("Phiếu "+ymLabel(ui.period).toLowerCase()+" của căn này đã đánh dấu ĐÃ THU.\nCó áp dụng đơn giá mới cho phiếu đó không?"))apply(cur);
+   }
    state.properties[k]=p}else state.properties.push(p);
   save();closeSheet();render();toast(nUp?"Đã lưu · cập nhật "+nUp+" phiếu chưa thu":"Đã lưu")}
  else if(a==="delprop"){
+  const n=state.invoices.filter(i=>i.propertyId===id).length;
+  if(!confirm("Xoá "+(P(id).name||"căn hộ này")+" và "+n+" hoá đơn liên quan?\nThao tác này không hoàn tác được."))return;
   state.properties=state.properties.filter(p=>p.id!==id);
   state.invoices=state.invoices.filter(i=>i.propertyId!==id);
   save();closeSheet();render();toast("Đã xoá")}
