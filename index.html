@@ -306,16 +306,21 @@ function invSheet(id){
  <div class="two"><label><span>Chỉ số điện đầu kỳ</span><input id="f_elecStart" inputmode="decimal" value="${i.elecStart}"></label>
  <label><span>Chỉ số điện cuối kỳ</span><input id="f_elecEnd" inputmode="decimal" value="${i.elecEnd}"><em id="e_hint">${num(c.eU)} kWh · ${money(c.elec)} đ</em></label></div>
  <label><span>Tiền phòng</span><input id="f_rent" inputmode="numeric" value="${i.rent}"></label>
- <label><span>Số người ở trong kỳ</span><input id="f_people" inputmode="numeric" value="${i.people}"><em>Nước ${money(c.water)} đ · Net ${money(c.net)} đ</em></label>
+ <label><span>Số người ở trong kỳ</span><input id="f_people" inputmode="numeric" value="${i.people}"><em id="wn_hint">Nước ${money(c.water)} đ · Net ${money(c.net)} đ</em></label>
+ <div class="two"><label><span>Nước /người</span><input id="f_waterPer" inputmode="numeric" value="${i.waterPer}"></label>
+ <label><span>Net /người</span><input id="f_netPer" inputmode="numeric" value="${i.netPer}"></label></div>
+ <label><span>Đơn giá điện /kWh</span><input id="f_elecPrice" inputmode="numeric" value="${i.elecPrice}"></label>
  <div class="two"><label><span>Khoản khác</span><input id="f_other" inputmode="numeric" value="${i.otherAmount||""}"></label>
  <label><span>Diễn giải</span><input id="f_othernote" value="${esc(i.otherNote)}"></label></div>`,
  `<button class="wide" data-act="saveinv" data-id="${id}">Lưu hoá đơn</button>`);
- ["f_elecStart","f_elecEnd","f_rent","f_people","f_other"].forEach(k=>{const el=document.getElementById(k);el.oninput=()=>{
-   const t={...i,elecStart:toNum(v("f_elecStart")),elecEnd:toNum(v("f_elecEnd")),rent:toInt(v("f_rent")),people:toInt(v("f_people")),otherAmount:toInt(v("f_other"))};
-   const cc=calc(t);document.getElementById("tot").textContent=money(cc.total)+" đ";
-   document.getElementById("e_hint").textContent=num(cc.eU)+" kWh · "+money(cc.elec)+" đ";}});
+ ["f_elecStart","f_elecEnd","f_rent","f_people","f_other","f_waterPer","f_netPer","f_elecPrice"].forEach(k=>{const el=document.getElementById(k);el.oninput=()=>{
+   const cc=calc({...i,...invForm()});document.getElementById("tot").textContent=money(cc.total)+" đ";
+   document.getElementById("e_hint").textContent=num(cc.eU)+" kWh · "+money(cc.elec)+" đ";
+   document.getElementById("wn_hint").textContent="Nước "+money(cc.water)+" đ · Net "+money(cc.net)+" đ";}});
 }
 const v=id=>document.getElementById(id).value;
+const invForm=()=>({elecStart:toNum(v("f_elecStart")),elecEnd:toNum(v("f_elecEnd")),rent:toInt(v("f_rent")),people:toInt(v("f_people")),
+ otherAmount:toInt(v("f_other")),waterPer:toInt(v("f_waterPer")),netPer:toInt(v("f_netPer")),elecPrice:toInt(v("f_elecPrice"))});
 
 function propSheet(id){
  const isNew=!id;
@@ -436,7 +441,7 @@ document.body.addEventListener("click",e=>{
   msgSheet(state.invoices.filter(i=>i.period===ui.period&&!i.paid&&Number(P(i.propertyId).dueDay)===d).map(i=>i.id))}
  else if(a==="paid"){const i=I(id);i.paid=!i.paid;i.paidDate=i.paid?dmy(new Date()):"";save();render()}
  else if(a==="saveinv"){const i=I(id);
-  Object.assign(i,{elecStart:toNum(v("f_elecStart")),elecEnd:toNum(v("f_elecEnd")),rent:toInt(v("f_rent")),people:toInt(v("f_people")),otherAmount:toInt(v("f_other")),otherNote:v("f_othernote")});
+  Object.assign(i,invForm(),{otherNote:v("f_othernote")});
   save();closeSheet();render();toast("Đã lưu")}
  else if(a==="addprop")propSheet(null);
  else if(a==="editprop")propSheet(id);
@@ -444,9 +449,14 @@ document.body.addEventListener("click",e=>{
   const p={id,name:v("p_name"),tenant:v("p_tenant"),phone:v("p_phone"),start:v("p_start"),end:v("p_end"),
    rent:toInt(v("p_rent")),dueDay:toInt(v("p_dueDay")),people:toInt(v("p_people")),elecPrice:toInt(v("p_elecPrice")),
    waterPer:toInt(v("p_waterPer")),netPer:toInt(v("p_netPer")),deposit:toInt(v("p_deposit")),elecIndex:toNum(v("p_elecIndex"))};
-  const k=state.properties.findIndex(x=>x.id===id);
-  if(k>=0)state.properties[k]=p;else state.properties.push(p);
-  save();closeSheet();render();toast("Đã lưu")}
+  const k=state.properties.findIndex(x=>x.id===id);let nUp=0;
+  if(k>=0){const old=state.properties[k];
+   /* cập nhật các phiếu CHƯA THU của căn này; ô nào đã sửa tay trong phiếu thì giữ nguyên */
+   state.invoices.forEach(i=>{if(i.propertyId!==id||i.paid)return;let ch=false;
+    ["rent","people","elecPrice","waterPer","netPer"].forEach(f=>{if(Number(i[f])===Number(old[f])&&Number(old[f])!==Number(p[f])){i[f]=p[f];ch=true}});
+    if(ch)nUp++});
+   state.properties[k]=p}else state.properties.push(p);
+  save();closeSheet();render();toast(nUp?"Đã lưu · cập nhật "+nUp+" phiếu chưa thu":"Đã lưu")}
  else if(a==="delprop"){
   state.properties=state.properties.filter(p=>p.id!==id);
   state.invoices=state.invoices.filter(i=>i.propertyId!==id);
